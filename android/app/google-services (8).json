@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "772768166222",
+    "firebase_url": "https://bondhu-cf2df-default-rtdb.firebaseio.com",
+    "project_id": "bondhu-cf2df",
+    "storage_bucket": "bondhu-cf2df.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:772768166222:android:fcb7c5695caa1400872e1f",
+        "android_client_info": {
+          "package_name": "com.bondhu.social"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBifNo62Vm2f9o3KOt0NbxMVJaKjR1PcmM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
