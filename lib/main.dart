@@ -25,7 +25,6 @@ class BondhuApp extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: true,
         colorSchemeSeed: Colors.blue,
-        scaffoldBackgroundColor: Colors.white,
       ),
       home: const AuthGate(),
     );
