@@ -1,6 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 
 import 'phone_login_screen.dart';
 import 'signup_screen.dart';
@@ -13,37 +12,44 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  bool loading = false;
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
 
-  Future<void> signInWithGoogle() async {
+  bool loading = false;
+  bool obscurePassword = true;
+
+  Future<void> login() async {
+    final email = emailController.text.trim();
+    final password = passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      showMessage('Email এবং Password দিন');
+      return;
+    }
+
     setState(() {
       loading = true;
     });
 
     try {
-      final GoogleSignInAccount? googleUser =
-          await GoogleSignIn.instance.authenticate();
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+    } on FirebaseAuthException catch (e) {
+      String message = 'Login করা যায়নি';
 
-      if (googleUser == null) {
-        return;
+      if (e.code == 'invalid-credential') {
+        message = 'Email অথবা Password সঠিক নয়';
+      } else if (e.code == 'user-not-found') {
+        message = 'এই Email-এর কোনো Account নেই';
+      } else if (e.code == 'wrong-password') {
+        message = 'Password সঠিক নয়';
+      } else if (e.code == 'invalid-email') {
+        message = 'Email সঠিক নয়';
       }
 
-      final GoogleSignInAuthentication googleAuth =
-          await googleUser.authentication;
-
-      final credential = GoogleAuthProvider.credential(
-        idToken: googleAuth.idToken,
-      );
-
-      await FirebaseAuth.instance.signInWithCredential(credential);
-    } catch (e) {
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Google Login ব্যর্থ হয়েছে: $e'),
-        ),
-      );
+      showMessage(message);
     } finally {
       if (mounted) {
         setState(() {
@@ -53,114 +59,181 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  void showMessage(String message) {
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              children: [
-                const Icon(
-                  Icons.people_alt_rounded,
-                  size: 80,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            children: [
+              const SizedBox(height: 50),
+
+              const Icon(
+                Icons.people_alt_rounded,
+                size: 80,
+                color: Colors.blue,
+              ),
+
+              const SizedBox(height: 15),
+
+              const Text(
+                'Bondhu',
+                style: TextStyle(
+                  fontSize: 42,
+                  fontWeight: FontWeight.bold,
                   color: Colors.blue,
                 ),
+              ),
 
-                const SizedBox(height: 20),
+              const SizedBox(height: 8),
 
-                const Text(
-                  'Bondhu',
-                  style: TextStyle(
-                    fontSize: 42,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.blue,
-                  ),
+              const Text(
+                'বন্ধুদের সাথে যুক্ত থাকুন',
+                style: TextStyle(
+                  fontSize: 17,
+                  color: Colors.grey,
                 ),
+              ),
 
-                const SizedBox(height: 8),
+              const SizedBox(height: 40),
 
-                const Text(
-                  'বন্ধুদের সাথে যুক্ত থাকুন',
-                  style: TextStyle(
-                    fontSize: 17,
-                    color: Colors.grey,
-                  ),
+              TextField(
+                controller: emailController,
+                keyboardType: TextInputType.emailAddress,
+                decoration: const InputDecoration(
+                  labelText: 'Email',
+                  prefixIcon: Icon(Icons.email_outlined),
+                  border: OutlineInputBorder(),
                 ),
+              ),
 
-                const SizedBox(height: 45),
+              const SizedBox(height: 15),
 
-                SizedBox(
-                  width: double.infinity,
-                  height: 52,
-                  child: ElevatedButton.icon(
-                    onPressed: loading ? null : signInWithGoogle,
-                    icon: const Icon(Icons.g_mobiledata),
-                    label: const Text(
-                      'Google দিয়ে Login',
-                      style: TextStyle(fontSize: 16),
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 15),
-
-                SizedBox(
-                  width: double.infinity,
-                  height: 52,
-                  child: OutlinedButton.icon(
+              TextField(
+                controller: passwordController,
+                obscureText: obscurePassword,
+                decoration: InputDecoration(
+                  labelText: 'Password',
+                  prefixIcon: const Icon(Icons.lock_outline),
+                  border: const OutlineInputBorder(),
+                  suffixIcon: IconButton(
                     onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const PhoneLoginScreen(),
-                        ),
-                      );
+                      setState(() {
+                        obscurePassword = !obscurePassword;
+                      });
                     },
-                    icon: const Icon(Icons.phone),
-                    label: const Text(
-                      'Phone Number দিয়ে Login',
-                      style: TextStyle(fontSize: 16),
+                    icon: Icon(
+                      obscurePassword
+                          ? Icons.visibility
+                          : Icons.visibility_off,
                     ),
                   ),
                 ),
+              ),
 
-                const SizedBox(height: 25),
+              const SizedBox(height: 20),
 
-                Row(
-                  children: const [
-                    Expanded(child: Divider()),
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 12),
-                      child: Text('অথবা'),
-                    ),
-                    Expanded(child: Divider()),
-                  ],
-                ),
-
-                const SizedBox(height: 25),
-
-                SizedBox(
-                  width: double.infinity,
-                  height: 52,
-                  child: FilledButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const SignupScreen(),
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: FilledButton(
+                  onPressed: loading ? null : login,
+                  child: loading
+                      ? const CircularProgressIndicator()
+                      : const Text(
+                          'Login',
+                          style: TextStyle(fontSize: 17),
                         ),
-                      );
-                    },
-                    child: const Text(
-                      'নতুন Account তৈরি করুন',
-                      style: TextStyle(fontSize: 16),
-                    ),
+                ),
+              ),
+
+              const SizedBox(height: 15),
+
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const PhoneLoginScreen(),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.phone),
+                  label: const Text(
+                    'Phone Number দিয়ে Login',
+                    style: TextStyle(fontSize: 16),
                   ),
                 ),
-              ],
-            ),
+              ),
+
+              const SizedBox(height: 25),
+
+              Row(
+                children: const [
+                  Expanded(child: Divider()),
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 12),
+                    child: Text('অথবা'),
+                  ),
+                  Expanded(child: Divider()),
+                ],
+              ),
+
+              const SizedBox(height: 25),
+
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    showMessage(
+                      'Google Login পরের ধাপে চালু করা হবে',
+                    );
+                  },
+                  icon: const Icon(Icons.g_mobiledata),
+                  label: const Text(
+                    'Google দিয়ে Login',
+                    style: TextStyle(fontSize: 16),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              TextButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const SignupScreen(),
+                    ),
+                  );
+                },
+                child: const Text(
+                  'নতুন Account তৈরি করুন',
+                  style: TextStyle(fontSize: 16),
+                ),
+              ),
+            ],
           ),
         ),
       ),
