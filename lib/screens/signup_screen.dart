@@ -17,7 +17,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
   bool loading = false;
 
-  Future<void> signup() async {
+  Future<void> createAccount() async {
     final name = nameController.text.trim();
     final username = usernameController.text.trim().toLowerCase();
     final email = emailController.text.trim();
@@ -41,16 +41,17 @@ class _SignupScreenState extends State<SignupScreen> {
     });
 
     try {
-      final credential =
-          await FirebaseAuth.instance.createUserWithEmailAndPassword(
+      final result = await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
 
-      final user = credential.user;
+      final user = result.user;
 
       if (user == null) {
-        throw Exception('Account তৈরি হয়নি');
+        showMessage('Account তৈরি করা যায়নি');
+        return;
       }
 
       await user.updateDisplayName(name);
@@ -71,6 +72,8 @@ class _SignupScreenState extends State<SignupScreen> {
 
       if (!mounted) return;
 
+      showMessage('Bondhu Account তৈরি হয়েছে!');
+
       Navigator.pop(context);
     } on FirebaseAuthException catch (e) {
       String message = 'Account তৈরি করা যায়নি';
@@ -80,12 +83,12 @@ class _SignupScreenState extends State<SignupScreen> {
       } else if (e.code == 'invalid-email') {
         message = 'Email সঠিক নয়';
       } else if (e.code == 'weak-password') {
-        message = 'Password খুব দুর্বল';
+        message = 'Password আরও শক্তিশালী দিন';
       }
 
       showMessage(message);
     } catch (e) {
-      showMessage('সমস্যা হয়েছে: $e');
+      showMessage('সমস্যা হয়েছে');
     } finally {
       if (mounted) {
         setState(() {
@@ -116,7 +119,7 @@ class _SignupScreenState extends State<SignupScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Create Account'),
+        title: const Text('নতুন Account'),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
@@ -125,9 +128,9 @@ class _SignupScreenState extends State<SignupScreen> {
             const SizedBox(height: 20),
 
             const Text(
-              'Bondhu Account তৈরি করুন',
+              'Bondhu-তে যোগ দিন',
               style: TextStyle(
-                fontSize: 25,
+                fontSize: 27,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -138,7 +141,7 @@ class _SignupScreenState extends State<SignupScreen> {
               controller: nameController,
               decoration: const InputDecoration(
                 labelText: 'আপনার নাম',
-                prefixIcon: Icon(Icons.person),
+                prefixIcon: Icon(Icons.person_outline),
                 border: OutlineInputBorder(),
               ),
             ),
@@ -149,6 +152,7 @@ class _SignupScreenState extends State<SignupScreen> {
               controller: usernameController,
               decoration: const InputDecoration(
                 labelText: 'Username',
+                hintText: 'যেমন: mojidul123',
                 prefixIcon: Icon(Icons.alternate_email),
                 border: OutlineInputBorder(),
               ),
@@ -161,7 +165,7 @@ class _SignupScreenState extends State<SignupScreen> {
               keyboardType: TextInputType.emailAddress,
               decoration: const InputDecoration(
                 labelText: 'Email',
-                prefixIcon: Icon(Icons.email),
+                prefixIcon: Icon(Icons.email_outlined),
                 border: OutlineInputBorder(),
               ),
             ),
@@ -173,7 +177,7 @@ class _SignupScreenState extends State<SignupScreen> {
               obscureText: true,
               decoration: const InputDecoration(
                 labelText: 'Password',
-                prefixIcon: Icon(Icons.lock),
+                prefixIcon: Icon(Icons.lock_outline),
                 border: OutlineInputBorder(),
               ),
             ),
@@ -184,7 +188,7 @@ class _SignupScreenState extends State<SignupScreen> {
               width: double.infinity,
               height: 52,
               child: FilledButton(
-                onPressed: loading ? null : signup,
+                onPressed: loading ? null : createAccount,
                 child: loading
                     ? const CircularProgressIndicator()
                     : const Text(
