@@ -20,7 +20,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
     final phone = phoneController.text.trim();
 
     if (phone.isEmpty) {
-      showMessage('Phone number দিন');
+      showMessage('Phone Number দিন');
       return;
     }
 
@@ -28,33 +28,39 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
       loading = true;
     });
 
-    try {
-      await FirebaseAuth.instance.verifyPhoneNumber(
-        phoneNumber: phone,
-        verificationCompleted: (credential) async {
-          await FirebaseAuth.instance.signInWithCredential(credential);
-        },
-        verificationFailed: (error) {
-          showMessage(error.message ?? 'OTP পাঠানো যায়নি');
-        },
-        codeSent: (id, resendToken) {
-          setState(() {
-            verificationId = id;
-            otpSent = true;
-          });
+    await FirebaseAuth.instance.verifyPhoneNumber(
+      phoneNumber: phone,
 
-          showMessage('OTP পাঠানো হয়েছে');
-        },
-        codeAutoRetrievalTimeout: (id) {
-          verificationId = id;
-        },
-      );
-    } finally {
-      if (mounted) {
+      verificationCompleted: (PhoneAuthCredential credential) async {
+        await FirebaseAuth.instance.signInWithCredential(credential);
+      },
+
+      verificationFailed: (FirebaseAuthException error) {
+        showMessage(
+          error.message ?? 'OTP পাঠানো যায়নি',
+        );
+      },
+
+      codeSent: (String id, int? resendToken) {
+        if (!mounted) return;
+
         setState(() {
-          loading = false;
+          verificationId = id;
+          otpSent = true;
         });
-      }
+
+        showMessage('OTP পাঠানো হয়েছে');
+      },
+
+      codeAutoRetrievalTimeout: (String id) {
+        verificationId = id;
+      },
+    );
+
+    if (mounted) {
+      setState(() {
+        loading = false;
+      });
     }
   }
 
@@ -64,7 +70,9 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
       return;
     }
 
-    if (otpController.text.trim().length < 6) {
+    final otp = otpController.text.trim();
+
+    if (otp.length != 6) {
       showMessage('৬ সংখ্যার OTP দিন');
       return;
     }
@@ -76,12 +84,16 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
     try {
       final credential = PhoneAuthProvider.credential(
         verificationId: verificationId!,
-        smsCode: otpController.text.trim(),
+        smsCode: otp,
       );
 
-      await FirebaseAuth.instance.signInWithCredential(credential);
+      await FirebaseAuth.instance.signInWithCredential(
+        credential,
+      );
     } on FirebaseAuthException catch (e) {
-      showMessage(e.message ?? 'OTP সঠিক নয়');
+      showMessage(
+        e.message ?? 'OTP সঠিক নয়',
+      );
     } finally {
       if (mounted) {
         setState(() {
@@ -120,7 +132,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
 
             const Icon(
               Icons.phone_android,
-              size: 70,
+              size: 75,
               color: Colors.blue,
             ),
 
@@ -142,9 +154,12 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
             SizedBox(
               width: double.infinity,
               height: 52,
-              child: ElevatedButton(
+              child: FilledButton(
                 onPressed: loading ? null : sendOtp,
-                child: const Text('OTP পাঠান'),
+                child: const Text(
+                  'OTP পাঠান',
+                  style: TextStyle(fontSize: 16),
+                ),
               ),
             ),
 
@@ -167,9 +182,12 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
               SizedBox(
                 width: double.infinity,
                 height: 52,
-                child: FilledButton(
+                child: ElevatedButton(
                   onPressed: loading ? null : verifyOtp,
-                  child: const Text('Verify OTP'),
+                  child: const Text(
+                    'Verify OTP',
+                    style: TextStyle(fontSize: 16),
+                  ),
                 ),
               ),
             ],
