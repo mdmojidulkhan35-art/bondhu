@@ -24,7 +24,6 @@ class HomeScreen extends StatelessWidget {
           IconButton(
             onPressed: logout,
             icon: const Icon(Icons.logout),
-            tooltip: 'Logout',
           ),
         ],
       ),
@@ -48,22 +47,20 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 10),
+            const SizedBox(height: 12),
 
             Text(
-              user?.displayName ?? user?.email ?? 'Bondhu User',
-              style: const TextStyle(
-                fontSize: 16,
-              ),
+              user?.displayName ??
+                  user?.email ??
+                  'Bondhu User',
+              style: const TextStyle(fontSize: 16),
             ),
 
-            const SizedBox(height: 30),
+            const SizedBox(height: 25),
 
             const Text(
               'Account & Login সফল হয়েছে।',
-              style: TextStyle(
-                color: Colors.grey,
-              ),
+              style: TextStyle(color: Colors.grey),
             ),
           ],
         ),
